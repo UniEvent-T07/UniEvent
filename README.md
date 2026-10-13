@@ -69,4 +69,3 @@ Secrets (`.env`, API keys, passwords) are **never** committed. Each module will 
 - Tasks are tracked on the Notion board **UniEvent Tasks**; new tasks are posted automatically to the Discord channel `#task-updates` (see [`docs/devops/notion-discord-notifications.md`](docs/devops/notion-discord-notifications.md)).
 - Team communication: Discord server **UniEvent - T07**.
 - Weekly status reports: every Sunday 22:00 (GMT+7) in `/docs/management/weekly/`.
-# UniEvent
