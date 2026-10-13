@@ -1,0 +1,32 @@
+name: Notion → Discord task notifications
+
+on:
+  schedule:
+    - cron: "*/5 * * * *" # mỗi 5 phút (GitHub có thể trễ vài phút khi tải cao)
+  workflow_dispatch: {} # chạy tay: tab Actions → Run workflow
+
+concurrency:
+  group: notion-discord
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/scripts
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Send new Notion tasks to Discord
+        run: node .github/scripts/notion-to-discord.mjs
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          DISCORD_MENTIONS: ${{ secrets.DISCORD_MENTIONS }}
