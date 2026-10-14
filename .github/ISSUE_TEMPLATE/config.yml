@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Task board (GitHub Project "Team Management")
+    url: https://github.com/orgs/UniEvent-T07/projects/1
+    about: Xem và cập nhật trạng thái các task của nhóm.
