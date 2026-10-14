@@ -67,5 +67,6 @@ Secrets (`.env`, API keys, passwords) are **never** committed. Each module will 
 - `main` is protected: every change goes through a pull request with at least one review.
 - Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `docs:`, `test:`, `refactor:`, `chore:`, `ci:`).
 - Tasks are GitHub issues on the GitHub Project [**Team Management**](https://github.com/orgs/UniEvent-T07/projects/1); new and newly assigned tasks are posted automatically to the Discord channel `#task-updates` (see [`docs/devops/task-notifications.md`](docs/devops/task-notifications.md)).
+- Team guides (Vietnamese): [Discord](docs/guides/discord.md) · [GitHub Project](docs/guides/github-project.md).
 - Team communication: Discord server **UniEvent - T07**.
 - Weekly status reports: every Sunday 22:00 (GMT+7) in `/docs/management/weekly/`.
