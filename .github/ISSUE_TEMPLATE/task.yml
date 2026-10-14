@@ -1,0 +1,29 @@
+name: Task
+description: Một việc cần làm của nhóm (tài liệu, code, test, họp…). Issue mới tự vào GitHub Project "Team Management".
+title: "<Động từ + việc cần làm>"
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Mô tả
+      description: Làm gì, vì sao, liên quan PA / tài liệu nào.
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: Tiêu chí hoàn thành
+      description: Khi nào task được coi là xong (Definition of done).
+      value: |
+        - [ ] 
+    validations:
+      required: true
+  - type: input
+    id: due
+    attributes:
+      label: Hạn
+      placeholder: "dd/mm/yyyy"
+  - type: markdown
+    attributes:
+      value: |
+        Sau khi tạo: chọn **Assignees** (người làm) và gắn nhãn `priority: …`, `pa…`/`weekly`, `type: …` ở cột bên phải. Task mới sẽ được báo vào Discord `#task-updates`.
