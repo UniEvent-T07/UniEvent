@@ -10,13 +10,13 @@
 
 ## 1. Completed this week
 
-| Task (Notion ID) | Owner | Evidence (PR / commit / document link) |
+| Task (issue #) | Owner | Evidence (PR / commit / document link) |
 | --- | --- | --- |
 |  |  |  |
 
 ## 2. Planned for next week
 
-| Task (Notion ID) | Owner | Due |
+| Task (issue #) | Owner | Due |
 | --- | --- | --- |
 |  |  |  |
 

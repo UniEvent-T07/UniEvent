@@ -1,0 +1,29 @@
+name: Issues → Discord task notifications
+
+on:
+  issues:
+    types: [opened, assigned]
+
+concurrency:
+  group: issue-discord-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          sparse-checkout: .github
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - name: Post the task to Discord #task-updates
+        run: node .github/scripts/issue-to-discord.mjs
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          DISCORD_MENTIONS: ${{ secrets.DISCORD_MENTIONS }}
