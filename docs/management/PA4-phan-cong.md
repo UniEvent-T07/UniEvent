@@ -61,7 +61,7 @@ Mỗi người làm trước phần mà người khác đang chờ.
 - [ ] Seed một bộ dữ liệu cho mỗi trạng thái ở điểm nối, dùng mã cố định như `evt_published_paid` hay `tkt_issued_unchecked`, cùng tài khoản mẫu cho mỗi vai trò.
 - [ ] Guard phân quyền với chữ ký cố định (`@Roles`, `@Scope` hoặc tương đương) và dev login bằng user seed. F01 thật chỉ thay phần bên trong.
 - [ ] Hàm ghi `AuditLog` trong cùng transaction theo BR-11.
-- [ ] CI chạy lint, typecheck và test, kèm một test mẫu cho web và API.
+- [ ] CI chạy lint, typecheck và test, kèm một test mẫu cho web và API. CI chạy thêm `node scripts/test-cases.mjs` để kiểm tra các file `docs/test/Fxx.md`.
 - [ ] README đổi payOS thành SePay và cập nhật hosting theo ADR-004.
 
 **Staging E1, trước T5 3/12.** Web chạy trên Vercel, API trên Render, DB trên Supabase. Staging tự deploy khi merge vào `main` và đi theo ADR-004. Biến môi trường SePay sandbox giữ trên host, không đưa vào repo.

@@ -23,13 +23,25 @@ Template [TEMPLATE-Fxx.md](TEMPLATE-Fxx.md) theo đúng mẫu nộp `PA4-TestPla
 | 5. Test Case Specifications | Test Cases › Test Case Specifications |
 | 6. Open Integration Points | Không đưa vào bản nộp |
 
-Bảng **Requirements–Test Traceability** (`Req. ID | Test cases | Covered?`) được tạo ở PA4.3 từ cột `Req. / use case` của mục 4 trong cả 8 file. Vì vậy mỗi FR của tính năng phải xuất hiện trong cột này ở ít nhất một ca. Huy dựa vào cột này để rà độ phủ 47 FR.
+Bảng **Requirements–Test Traceability** (`Req. ID | Test cases | Covered?`) được script tạo từ cột `Req. / use case` của mục 4 trong cả 8 file. Vì vậy mỗi FR của tính năng phải xuất hiện trong cột này ở ít nhất một ca.
+
+## Script kiểm tra và ma trận truy vết
+
+Cần Node.js 18 trở lên, không cần cài gói nào. Chạy ở thư mục gốc repo:
+
+| Lệnh | Khi nào | Làm gì |
+| --- | --- | --- |
+| `node scripts/test-cases.mjs` | Trước mỗi PR có `Fxx.md` | Báo `error` cho lỗi phải sửa: mã ca trùng hoặc sai F, FR không có trong spec, Priority hay Automated? sai giá trị, ca được liên kết nhưng thiếu đặc tả, bảng quyết định trỏ tới ca không có, còn placeholder của template. Báo `warning` cho FR chưa phủ và số ca chi tiết còn thiếu. |
+| `node scripts/test-cases.mjs --strict` | PA4.2 trở đi | Như trên, nhưng FR chưa phủ, file chưa tạo và số ca chi tiết dưới mức được giao cũng tính là `error`. |
+| `node scripts/test-cases.mjs --strict --write` | PA4.3, Học chạy | Ghi `docs/test/TRACEABILITY.md` để chép vào bản nộp. Không sửa tay file này. |
+
+Script trả mã thoát 1 khi còn `error`, nên có thể gắn vào CI ở Setup v0. Số ca chi tiết được giao cho từng F nằm trong `SPEC_QUOTA` ở đầu script, đồng bộ với kế hoạch.
 
 Các phần còn lại của bản nộp do Học viết ở PA4.3: Member Contribution, các mục khác của Test Plan và AI Usage Log.
 
 ## Trước khi mở PR cho `Fxx.md`
 
-- Mã ca `TC-Fxx-NN` không trùng. Mã `FR-Fxx-NN` có trong [UNIEVENT-SPEC.md](../requirements/UNIEVENT-SPEC.md).
-- Mỗi FR của tính năng có ít nhất một ca ở mục 4. Mỗi cột trong bảng quyết định trỏ tới một ca.
-- Mỗi ca có đặc tả ở mục 5 thì được liên kết từ mục 4.
+- Chạy `node scripts/test-cases.mjs`, không còn dòng `error`. Dán dòng tổng kết cuối vào mô tả PR.
+- Mỗi FR của tính năng có ít nhất một ca ở mục 4, hoặc đã ghi lý do còn thiếu trong PR.
+- Kết quả mong đợi quan sát được trên màn hình, API hoặc DB. Script không kiểm tra được điểm này.
 - Nhờ **Huy** duyệt kết quả mong đợi và độ phủ, **Minh** duyệt kỹ thuật thiết kế test.
