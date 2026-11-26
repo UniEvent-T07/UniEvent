@@ -57,14 +57,14 @@ cd UniEvent
 npm ci
 ```
 
-Tạo tệp môi trường cho hai ứng dụng. Trên PowerShell dùng:
+Tạo tệp môi trường cho hai ứng dụng bằng PowerShell.
 
 ```powershell
 Copy-Item src/api/.env.example src/api/.env
 Copy-Item src/web/.env.example src/web/.env.local
 ```
 
-Trên Bash dùng:
+Trên Bash, dùng `cp`.
 
 ```bash
 cp src/api/.env.example src/api/.env
@@ -108,7 +108,7 @@ Lưu công việc đang mở trong WSL rồi dùng `wsl --shutdown` từ PowerSh
 
 ## Ways of working
 
-- `main` is protected: every change goes through a pull request with at least one review.
+- Every change to `main` goes through a pull request with at least one review.
 - Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `docs:`, `test:`, `refactor:`, `chore:`, `ci:`).
 - Tasks are GitHub issues on the GitHub Project [**Team Management**](https://github.com/orgs/UniEvent-T07/projects/1); new and newly assigned tasks are posted automatically to the Discord channel `#task-updates` (see [`docs/devops/task-notifications.md`](docs/devops/task-notifications.md)).
 - Team guides (Vietnamese): [Discord](docs/guides/discord.md) · [GitHub Project](docs/guides/github-project.md).
