@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: unievent
+          POSTGRES_PASSWORD: unievent
+          POSTGRES_DB: unievent_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U unievent -d unievent_test"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://unievent:unievent@localhost:5432/unievent_test
+      DIRECT_URL: postgresql://unievent:unievent@localhost:5432/unievent_test
+      API_ORIGIN: http://localhost:4000
+      WEB_ORIGIN: http://localhost:3000
+      SESSION_SECRET: ci-only-unievent-session-secret-change-in-staging
+      DEV_LOGIN_ENABLED: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx -w @unievent/api prisma validate
+      - run: npx -w @unievent/api prisma migrate deploy
+      - run: npx -w @unievent/api prisma generate
+      - run: npm run db:seed
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run test:e2e -w @unievent/api
+      - run: npm run test:cases
