@@ -29,14 +29,15 @@ Hạn theo GMT+7. PA4 nộp trước T7 5/12/2026, PA5 xong trước T4 9/12/202
 1. Đọc issue được giao hoặc nội dung người dùng cung cấp. Xem trạng thái trên GitHub Project và tiêu chí hoàn thành trong issue.
 2. Đọc mục **Fxx** liên quan trong [Đặc tả hệ thống rút gọn](docs/requirements/UNIEVENT-SPEC.md). Nếu chạm tới giao tiếp giữa hai tính năng, đọc thêm mục của tính năng bên kia.
 3. Đọc mục Fxx trong [Kế hoạch PA4 và PA5](docs/management/PA4-phan-cong.md) để biết phần được giao. Đây là tài liệu cho người đọc, hãy bỏ qua các liên kết PDF. Với code, đọc README của phần liên quan và code hiện có.
-4. Dùng tên gọi theo [GLOSSARY.md](GLOSSARY.md): tên tiếng Anh trong code, tên tiếng Việt trong docs. Khi chạm điểm nối giữa hai F, đọc `docs/design/contracts.md` và ADR liên quan trong `docs/design/adr/`.
+4. Dùng tên gọi theo [GLOSSARY.md](GLOSSARY.md): tên tiếng Anh trong code, tên tiếng Việt trong docs. Riêng ca kiểm thử `docs/test/Fxx.md` viết hoàn toàn bằng tiếng Anh, vì nội dung được chép thẳng vào bản nộp. Khi chạm điểm nối giữa hai F, đọc `docs/design/contracts.md` và ADR liên quan trong `docs/design/adr/`.
 
 **Agent không mở, chuyển đổi, tìm kiếm trong hay trích nội dung từ PDF.** Dùng Markdown, issue và code trong phạm vi task. Nếu thiếu luật nghiệp vụ, ghi mã FR/BR hoặc tình huống cụ thể rồi nhờ Huy bổ sung vào đặc tả Markdown. Ghi nhận đề xuất đang chờ duyệt theo đúng trạng thái.
 
 ## Thực hiện và bàn giao
 
 - Xác minh đúng checkout, nhánh, HEAD và thay đổi đang có theo hướng dẫn Git của môi trường. Giữ phần việc đang dở của người khác. Tách PR theo đầu việc đã giao. Học merge mọi PR vào `main`. PR chạm điểm nối cần thêm người phụ trách F ở đầu bên kia duyệt.
-- Ca kiểm thử PA4 viết vào `docs/test/Fxx.md` theo template, mã ca `TC-Fxx-NN`, ghi kèm mã `FR-Fxx-NN`.
+- Ca kiểm thử PA4 viết vào `docs/test/Fxx.md`, chép từ [TEMPLATE-Fxx.md](docs/test/TEMPLATE-Fxx.md), mã ca `TC-Fxx-NN`, ghi kèm mã `FR-Fxx-NN`. Mục 1–5 trong file tương ứng với các mục của mẫu nộp docx của môn, nên không đổi tiêu đề mục hay tiêu đề cột. Xem [docs/test/README.md](docs/test/README.md).
+- Trước khi bàn giao hoặc mở PR có `docs/test/Fxx.md`, chạy `node scripts/test-cases.mjs`, sửa hết các dòng `error` và ghi kết quả vào bàn giao. Các dòng `warning` về FR chưa phủ được chấp nhận trong lúc nháp. Ở PA4.3, Học chạy `--strict --write` để tạo `docs/test/TRACEABILITY.md`. Không sửa tay file này.
 - Làm phần có đầu ra kiểm tra được. Nếu phụ thuộc tính năng chưa có, ghi rõ dữ liệu cần nhận và người phụ trách. Có thể chuẩn bị phần độc lập bằng dữ liệu mẫu. Đánh dấu phần tích hợp còn chờ khi bàn giao.
 - Đọc lệnh build/test đã có trong repo trước khi chạy. Với việc chỉ làm Docs, kiểm tra liên kết, mã yêu cầu, ví dụ và tính nhất quán của ca. Chỉ báo kiểm tra đạt khi đã chạy và có kết quả.
 - Dùng dữ liệu giả lập cho kiểm thử. Giữ khóa, mật khẩu và thông tin người dùng thật ngoài repo.
