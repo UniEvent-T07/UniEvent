@@ -1,0 +1,110 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserStatus {
+  UNVERIFIED
+  ACTIVE
+  LOCKED
+}
+
+enum OrganisationType {
+  CLUB
+  APPROVAL_UNIT
+}
+
+enum OrganisationStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum Role {
+  ATTENDEE
+  ORGANISER
+  APPROVER
+  CHECKER
+  ADMINISTRATOR
+}
+
+enum ScopeType {
+  CLUB
+  APPROVAL_UNIT
+  EVENT
+}
+
+model User {
+  id              String           @id @default(cuid())
+  code            String           @unique
+  displayName     String           @map("display_name") @db.VarChar(150)
+  email           String           @unique
+  status          UserStatus       @default(UNVERIFIED)
+  emailVerifiedAt DateTime?        @map("email_verified_at") @db.Timestamptz(3)
+  roleAssignments RoleAssignment[]
+  sessions        Session[]
+  auditLogs       AuditLog[]
+
+  @@map("users")
+}
+
+model Organisation {
+  id               String             @id @default(cuid())
+  code             String             @unique
+  name             String
+  type             OrganisationType
+  approvalUnitId   String?            @map("approval_unit_id")
+  approvalUnit     Organisation?      @relation("ApprovalRoute", fields: [approvalUnitId], references: [id], onDelete: Restrict)
+  clubs            Organisation[]     @relation("ApprovalRoute")
+  status           OrganisationStatus @default(ACTIVE)
+
+  @@index([approvalUnitId])
+  @@map("organisations")
+}
+
+model RoleAssignment {
+  id        String    @id @default(cuid())
+  userId    String    @map("user_id")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Restrict)
+  role      Role
+  scopeType ScopeType? @map("scope_type")
+  scopeId   String?   @map("scope_id")
+  revokedAt DateTime? @map("revoked_at") @db.Timestamptz(3)
+
+  @@index([userId, revokedAt])
+  @@map("role_assignments")
+}
+
+model Session {
+  id             String    @id @default(cuid())
+  tokenHash      String    @unique @map("token_hash")
+  userId         String    @map("user_id")
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  lastActivityAt DateTime  @default(now()) @map("last_activity_at") @db.Timestamptz(3)
+  expiresAt      DateTime  @map("expires_at") @db.Timestamptz(3)
+  revokedAt      DateTime? @map("revoked_at") @db.Timestamptz(3)
+
+  @@index([userId, revokedAt])
+  @@map("sessions")
+}
+
+model AuditLog {
+  id         String     @id @default(cuid())
+  actorId    String     @map("actor_id")
+  actor      User       @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  action     String
+  targetType String     @map("target_type")
+  targetId   String     @map("target_id")
+  scopeType  ScopeType? @map("scope_type")
+  scopeId    String?    @map("scope_id")
+  result     String
+  occurredAt DateTime   @default(now()) @map("occurred_at") @db.Timestamptz(3)
+
+  @@index([occurredAt])
+  @@index([targetType, targetId])
+  @@map("audit_logs")
+}
