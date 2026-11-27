@@ -1,0 +1,328 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserStatus {
+  UNVERIFIED
+  ACTIVE
+  LOCKED
+}
+
+enum OrganisationType {
+  CLUB
+  APPROVAL_UNIT
+}
+
+enum OrganisationStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum Role {
+  ATTENDEE
+  ORGANISER
+  APPROVER
+  CHECKER
+  ADMINISTRATOR
+}
+
+enum ScopeType {
+  CLUB
+  APPROVAL_UNIT
+  EVENT
+}
+
+model User {
+  id                    String           @id @default(cuid())
+  code                  String           @unique
+  displayName           String           @map("display_name") @db.VarChar(150)
+  email                 String           @unique
+  status                UserStatus       @default(UNVERIFIED)
+  emailVerifiedAt       DateTime?        @map("email_verified_at") @db.Timestamptz(3)
+  roleAssignments       RoleAssignment[]
+  sessions              Session[]
+  auditLogs             AuditLog[]
+  submittedReviewRounds ReviewRound[]
+  reviewDecisions       ReviewDecision[]
+  reservations          Reservation[]
+  recordedRefunds       ExternalRefund[]
+
+  @@map("users")
+}
+
+model Organisation {
+  id                 String             @id @default(cuid())
+  code               String             @unique
+  name               String
+  type               OrganisationType
+  approvalUnitId     String?            @map("approval_unit_id")
+  approvalUnit       Organisation?      @relation("ApprovalRoute", fields: [approvalUnitId], references: [id], onDelete: Restrict)
+  clubs              Organisation[]     @relation("ApprovalRoute")
+  status             OrganisationStatus @default(ACTIVE)
+  clubEvents         Event[]            @relation("ClubEvents")
+  approvalUnitEvents Event[]            @relation("ApprovalUnitEvents")
+
+  @@index([approvalUnitId])
+  @@map("organisations")
+}
+
+model RoleAssignment {
+  id        String     @id @default(cuid())
+  userId    String     @map("user_id")
+  user      User       @relation(fields: [userId], references: [id], onDelete: Restrict)
+  role      Role
+  scopeType ScopeType? @map("scope_type")
+  scopeId   String?    @map("scope_id")
+  revokedAt DateTime?  @map("revoked_at") @db.Timestamptz(3)
+
+  @@index([userId, revokedAt])
+  @@map("role_assignments")
+}
+
+model Session {
+  id             String    @id @default(cuid())
+  tokenHash      String    @unique @map("token_hash")
+  userId         String    @map("user_id")
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  lastActivityAt DateTime  @default(now()) @map("last_activity_at") @db.Timestamptz(3)
+  expiresAt      DateTime  @map("expires_at") @db.Timestamptz(3)
+  revokedAt      DateTime? @map("revoked_at") @db.Timestamptz(3)
+
+  @@index([userId, revokedAt])
+  @@map("sessions")
+}
+
+model AuditLog {
+  id         String     @id @default(cuid())
+  actorId    String     @map("actor_id")
+  actor      User       @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  action     String
+  targetType String     @map("target_type")
+  targetId   String     @map("target_id")
+  scopeType  ScopeType? @map("scope_type")
+  scopeId    String?    @map("scope_id")
+  result     String
+  occurredAt DateTime   @default(now()) @map("occurred_at") @db.Timestamptz(3)
+
+  @@index([occurredAt])
+  @@index([targetType, targetId])
+  @@map("audit_logs")
+}
+
+enum EventStatus {
+  DRAFT
+  SUBMITTED
+  CHANGES_REQUESTED
+  APPROVED
+  REJECTED
+  PUBLISHED
+}
+
+enum ReviewOutcome {
+  APPROVED
+  REJECTED
+  CHANGES_REQUESTED
+}
+
+enum ReservationStatus {
+  HOLDING
+  CONFIRMED
+  ISSUED
+  EXPIRED
+}
+
+enum PaymentExceptionKind {
+  LATE_PAYMENT
+  MISMATCH
+  EXTRA_TRANSFER
+  ISSUANCE_FAILURE
+}
+
+enum PaymentExceptionStatus {
+  OPEN
+  RESOLVED
+}
+
+model Event {
+  id             String        @id @default(cuid())
+  clubId         String        @map("club_id")
+  club           Organisation  @relation("ClubEvents", fields: [clubId], references: [id], onDelete: Restrict)
+  approvalUnitId String        @map("approval_unit_id")
+  approvalUnit   Organisation  @relation("ApprovalUnitEvents", fields: [approvalUnitId], references: [id], onDelete: Restrict)
+  title          String
+  description    String
+  eventStart     DateTime      @map("event_start") @db.Timestamptz(3)
+  eventEnd       DateTime      @map("event_end") @db.Timestamptz(3)
+  location       String
+  capacity       Int
+  poster         String
+  status         EventStatus   @default(DRAFT)
+  reviewRounds   ReviewRound[]
+  ticketTypes    TicketType[]
+
+  @@index([clubId, status])
+  @@index([approvalUnitId, status])
+  @@index([status, eventStart])
+  @@map("events")
+}
+
+model ReviewRound {
+  id            String          @id @default(cuid())
+  eventId       String          @map("event_id")
+  event         Event           @relation(fields: [eventId], references: [id], onDelete: Restrict)
+  roundNumber   Int             @map("round_number")
+  submittedById String          @map("submitted_by_id")
+  submittedBy   User            @relation(fields: [submittedById], references: [id], onDelete: Restrict)
+  submittedAt   DateTime        @default(now()) @map("submitted_at") @db.Timestamptz(3)
+  decision      ReviewDecision?
+
+  @@unique([eventId, roundNumber])
+  @@map("review_rounds")
+}
+
+model ReviewDecision {
+  id            String        @id @default(cuid())
+  reviewRoundId String        @unique @map("review_round_id")
+  reviewRound   ReviewRound   @relation(fields: [reviewRoundId], references: [id], onDelete: Restrict)
+  approverId    String        @map("approver_id")
+  approver      User          @relation(fields: [approverId], references: [id], onDelete: Restrict)
+  decision      ReviewOutcome
+  reason        String?
+  decidedAt     DateTime      @default(now()) @map("decided_at") @db.Timestamptz(3)
+
+  @@map("review_decisions")
+}
+
+model TicketType {
+  id              String        @id @default(cuid())
+  eventId         String        @map("event_id")
+  event           Event         @relation(fields: [eventId], references: [id], onDelete: Restrict)
+  name            String
+  priceVnd        Int           @map("price_vnd")
+  quantity        Int
+  perAccountLimit Int           @map("per_account_limit")
+  salesStart      DateTime      @map("sales_start") @db.Timestamptz(3)
+  salesEnd        DateTime      @map("sales_end") @db.Timestamptz(3)
+  reservations    Reservation[]
+  allocations     Allocation[]
+
+  @@index([eventId, salesStart])
+  @@map("ticket_types")
+}
+
+model Reservation {
+  id                         String             @id @default(cuid())
+  attendeeId                 String             @map("attendee_id")
+  attendee                   User               @relation(fields: [attendeeId], references: [id], onDelete: Restrict)
+  ticketTypeId               String             @map("ticket_type_id")
+  ticketType                 TicketType         @relation(fields: [ticketTypeId], references: [id], onDelete: Restrict)
+  status                     ReservationStatus
+  priceVnd                   Int                @map("price_vnd")
+  requestCode                String             @map("request_code")
+  invoiceCode                String?            @unique @map("invoice_code")
+  createdAt                  DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  expiresAt                  DateTime?          @map("expires_at") @db.Timestamptz(3)
+  allocation                 Allocation?
+  receipts                   PaymentReceipt[]   @relation("ReservationReceipts")
+  confirmingPaymentReceiptId String?            @map("confirming_payment_receipt_id")
+  confirmingPaymentReceipt   PaymentReceipt?    @relation("ConfirmingReceipt", fields: [confirmingPaymentReceiptId, id], references: [id, reservationId], onDelete: Restrict, onUpdate: Restrict)
+  paymentExceptions          PaymentException[]
+  ticket                     Ticket?
+
+  @@unique([attendeeId, requestCode])
+  @@unique([id, ticketTypeId])
+  @@unique([confirmingPaymentReceiptId, id])
+  @@index([ticketTypeId, attendeeId, status])
+  @@index([status, expiresAt])
+  @@map("reservations")
+}
+
+model Allocation {
+  id            String       @id @default(cuid())
+  ticketTypeId  String       @map("ticket_type_id")
+  ticketType    TicketType   @relation(fields: [ticketTypeId], references: [id], onDelete: Restrict)
+  reservationId String?      @map("reservation_id")
+  reservation   Reservation? @relation(fields: [reservationId, ticketTypeId], references: [id, ticketTypeId], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([reservationId, ticketTypeId])
+  @@index([ticketTypeId, reservationId])
+  @@map("allocations")
+}
+
+model PaymentReceipt {
+  id                String             @id @default(cuid())
+  reservationId     String?            @map("reservation_id")
+  reservation       Reservation?       @relation("ReservationReceipts", fields: [reservationId], references: [id], onDelete: Restrict)
+  providerReference String             @unique @map("provider_reference")
+  invoiceCode       String?            @map("invoice_code")
+  amountVnd         Int?               @map("amount_vnd")
+  currency          String?
+  evidence          Json?
+  receivedAt        DateTime           @default(now()) @map("received_at") @db.Timestamptz(3)
+  confirmedBy       Reservation?       @relation("ConfirmingReceipt")
+  paymentExceptions PaymentException[]
+  externalRefunds   ExternalRefund[]
+
+  @@unique([id, reservationId])
+  @@index([reservationId])
+  @@map("payment_receipts")
+}
+
+model PaymentException {
+  id               String                 @id @default(cuid())
+  reservationId    String?                @map("reservation_id")
+  reservation      Reservation?           @relation(fields: [reservationId], references: [id], onDelete: Restrict)
+  paymentReceiptId String?                @map("payment_receipt_id")
+  paymentReceipt   PaymentReceipt?        @relation(fields: [paymentReceiptId], references: [id], onDelete: Restrict)
+  kind             PaymentExceptionKind
+  status           PaymentExceptionStatus @default(OPEN)
+  createdAt        DateTime               @default(now()) @map("created_at") @db.Timestamptz(3)
+  resolvedAt       DateTime?              @map("resolved_at") @db.Timestamptz(3)
+
+  @@index([status, createdAt])
+  @@index([reservationId])
+  @@index([paymentReceiptId])
+  @@map("payment_exceptions")
+}
+
+model ExternalRefund {
+  id                        String         @id @default(cuid())
+  paymentReceiptId          String         @map("payment_receipt_id")
+  paymentReceipt            PaymentReceipt @relation(fields: [paymentReceiptId], references: [id], onDelete: Restrict)
+  recordedById              String         @map("recorded_by_id")
+  recordedBy                User           @relation(fields: [recordedById], references: [id], onDelete: Restrict)
+  transferReference         String         @unique @map("transfer_reference")
+  amountVnd                 Int            @map("amount_vnd")
+  refundedAt                DateTime       @map("refunded_at") @db.Timestamptz(3)
+  reason                    String
+  transferEvidence          String         @map("transfer_evidence")
+  payerNotificationEvidence String         @map("payer_notification_evidence")
+
+  @@index([paymentReceiptId])
+  @@map("external_refunds")
+}
+
+model Ticket {
+  id            String            @id @default(cuid())
+  reservationId String            @unique @map("reservation_id")
+  reservation   Reservation       @relation(fields: [reservationId], references: [id], onDelete: Restrict)
+  issuedAt      DateTime          @default(now()) @map("issued_at") @db.Timestamptz(3)
+  attendance    AttendanceRecord?
+
+  @@map("tickets")
+}
+
+model AttendanceRecord {
+  ticketId     String    @id @map("ticket_id")
+  ticket       Ticket    @relation(fields: [ticketId], references: [id], onDelete: Restrict)
+  checkedInAt  DateTime? @map("checked_in_at") @db.Timestamptz(3)
+  checkedOutAt DateTime? @map("checked_out_at") @db.Timestamptz(3)
+
+  @@map("attendance_records")
+}

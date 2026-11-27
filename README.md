@@ -21,23 +21,18 @@ Course project of **Team T07** – Introduction to Software Engineering, Softwar
 | F02 | Event creation and submission | Must |
 | F03 | Event approval workflow | Must |
 | F04 | Ticket type configuration | Must |
-| F05 | Ticket reservation and VietQR payment (payOS) | Must |
+| F05 | Ticket reservation and VietQR payment (SePay) | Must |
 | F06 | Payment confirmation and ticket issuing | Must |
 | F07 | QR check-in | Must |
 | F08 | Real-time organiser dashboard | Must |
 | F09 | Conduct score records | Should |
 | F10 | Cancellation and refund policy | Should |
 
-## Planned technology
+## Công nghệ và hosting
 
-> Not final – confirmed with reasons in PA1.
-
-- **Front end:** Next.js (React, TypeScript), Tailwind CSS
-- **Back end:** NestJS (TypeScript) on Node.js LTS, REST API and WebSocket gateway
-- **Database:** PostgreSQL with Prisma ORM
-- **External services:** payOS (VietQR payment links and webhooks), a transactional e-mail service
-- **Testing and CI:** Jest, Supertest, Playwright, k6, GitHub Actions, ESLint, SonarQube Cloud
-- **Hosting:** Docker images; Vercel (web), Render or Railway (API), Neon (PostgreSQL)
+- Web dùng Next.js và Tailwind CSS. API dùng NestJS và xử lý luật nghiệp vụ.
+- PostgreSQL chạy bằng Docker Compose cho dev và kiểm thử. Prisma dùng `DATABASE_URL` cho ứng dụng và `DIRECT_URL` cho migration. Staging dùng Supabase PostgreSQL.
+- Staging đặt web trên Vercel và API trên Render. Vercel chuyển tiếp yêu cầu REST ở `/api/*` đến Render để trình duyệt gửi cookie phiên cùng site. Kết nối Socket.IO và IPN SePay đi thẳng tới Render. [ADR-004](docs/design/adr/004-same-site-hosting-and-session-cookies.md)
 
 ## Repository structure
 
@@ -52,19 +47,68 @@ Course project of **Team T07** – Introduction to Software Engineering, Softwar
 | `/docs/devops` | Tooling and automation notes |
 | `/pa/PA0` … `/pa/PA5` | One sub-folder per PA submission (PDF + source files) |
 
-## Setup
+## Chạy local
 
-The source code is added to `/src` during the implementation weeks (weeks 8–10). Setup instructions will be completed then. Planned prerequisites:
+Cần Git, Node.js 22.22.3 trở lên trong dòng 22.x, npm và Docker có Compose.
 
-- Node.js LTS and npm
-- PostgreSQL (or Docker to run it locally)
-- A payOS sandbox account for payment testing
+```bash
+git clone https://github.com/UniEvent-T07/UniEvent.git
+cd UniEvent
+npm ci
+```
 
-Secrets (`.env`, API keys, passwords) are **never** committed. Each module will provide a `.env.example` file.
+Tạo tệp môi trường cho hai ứng dụng bằng PowerShell.
+
+```powershell
+Copy-Item src/api/.env.example src/api/.env
+Copy-Item src/web/.env.example src/web/.env.local
+```
+
+Trên Bash, dùng `cp`.
+
+```bash
+cp src/api/.env.example src/api/.env
+cp src/web/.env.example src/web/.env.local
+```
+
+```bash
+npm run db:up
+npm run db:migrate
+npm run db:seed
+npm run dev
+```
+
+Mở trang đăng nhập dev, chọn `usr_organiser_club_a`, rồi kiểm tra thông tin phiên ở `/me`. Web dùng cổng `3000`. API dùng cổng `4000` và có `GET /api/health`. [Đăng nhập dev](http://localhost:3000/dev-login)
+
+Đăng nhập dev chỉ bật khi `DEV_LOGIN_ENABLED=true` và `NODE_ENV` khác `production`. Giữ `SESSION_SECRET` riêng cho từng môi trường triển khai.
+
+### Chạy kiểm tra
+
+Chạy các lệnh sau khi đã khởi động, migrate và seed cơ sở dữ liệu. E2E của API dùng PostgreSQL và dữ liệu từ seed.
+
+```bash
+npm run lint
+npm run typecheck
+npm test
+npm run test:e2e -w @unievent/api
+npm run test:cases
+```
+
+### Docker Desktop trên Windows
+
+Nếu Docker dùng WSL 2 và chiếm nhiều tài nguyên, có thể đặt giới hạn phù hợp với máy trong `%UserProfile%\.wslconfig`.
+
+```ini
+[wsl2]
+memory=4GB
+processors=2
+```
+
+Lưu công việc đang mở trong WSL rồi dùng `wsl --shutdown` từ PowerShell. Mở lại Docker Desktop để áp dụng.
 
 ## Ways of working
 
-- `main` is protected: every change goes through a pull request with at least one review.
+- Every change to `main` goes through a pull request with at least one review.
 - Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `docs:`, `test:`, `refactor:`, `chore:`, `ci:`).
 - Tasks are GitHub issues on the GitHub Project [**Team Management**](https://github.com/orgs/UniEvent-T07/projects/1); new and newly assigned tasks are posted automatically to the Discord channel `#task-updates` (see [`docs/devops/task-notifications.md`](docs/devops/task-notifications.md)).
 - Team guides (Vietnamese): [Discord](docs/guides/discord.md) · [GitHub Project](docs/guides/github-project.md).
